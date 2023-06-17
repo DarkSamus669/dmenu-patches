@@ -1,0 +1,64 @@
+diff -up dmenu-orig/config.def.h dmenu-patch/config.def.h
+--- dmenu-orig/config.def.h	2022-10-04 23:06:58.000000000 +0530
++++ dmenu-patch/config.def.h	2023-06-17 01:48:14.687073662 +0530
+@@ -2,6 +2,7 @@
+ /* Default settings; can be overriden by command line. */
+ 
+ static int topbar = 1;                      /* -b  option; if 0, dmenu appears at bottom     */
++static int caret_heightpad = 4;             /* -chp option; set caret height padding top and bottom */
+ /* -fn option overrides fonts[0]; default X11 font or font set */
+ static const char *fonts[] = {
+ 	"monospace:size=10"
+diff -up dmenu-orig/dmenu.1 dmenu-patch/dmenu.1
+--- dmenu-orig/dmenu.1	2022-10-04 23:06:58.000000000 +0530
++++ dmenu-patch/dmenu.1	2023-06-17 01:55:49.716139259 +0530
+@@ -20,6 +20,8 @@ dmenu \- dynamic menu
+ .IR color ]
+ .RB [ \-sf
+ .IR color ]
++.RB [ \-chp
++.IR caret_height_padding ]
+ .RB [ \-w
+ .IR windowid ]
+ .P
+@@ -75,6 +77,9 @@ defines the selected background color.
+ .BI \-sf " color"
+ defines the selected foreground color.
+ .TP
++.BI \-chp " caret_height_padding "
++sets caret height padding top and bottom
++.TP
+ .B \-v
+ prints version information to stdout, then exits.
+ .TP
+diff -up dmenu-orig/dmenu.c dmenu-patch/dmenu.c
+--- dmenu-orig/dmenu.c	2022-10-04 23:06:58.000000000 +0530
++++ dmenu-patch/dmenu.c	2023-06-17 01:58:55.956065486 +0530
+@@ -165,7 +165,7 @@ drawmenu(void)
+ 	curpos = TEXTW(text) - TEXTW(&text[cursor]);
+ 	if ((curpos += lrpad / 2 - 1) < w) {
+ 		drw_setscheme(drw, scheme[SchemeNorm]);
+-		drw_rect(drw, x + curpos, 2, 2, bh - 4, 1, 0);
++		drw_rect(drw, x + curpos, caret_heightpad / 2, 2, bh - caret_heightpad, 1, 0);
+ 	}
+ 
+ 	if (lines > 0) {
+@@ -711,7 +711,8 @@ static void
+ usage(void)
+ {
+ 	die("usage: dmenu [-bfiv] [-l lines] [-p prompt] [-fn font] [-m monitor]\n"
+-	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
++	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-chp caret_height_padding]\n"
++        "             [-w windowid]");
+ }
+ 
+ int
+@@ -751,6 +752,8 @@ main(int argc, char *argv[])
+ 			colors[SchemeSel][ColBg] = argv[++i];
+ 		else if (!strcmp(argv[i], "-sf"))  /* selected foreground color */
+ 			colors[SchemeSel][ColFg] = argv[++i];
++        else if (!strcmp(argv[i], "-chp"))  /* sets caret height padding top and bottom */
++			caret_heightpad = atoi(argv[++i]);
+ 		else if (!strcmp(argv[i], "-w"))   /* embedding window id */
+ 			embed = argv[++i];
+ 		else
